@@ -9,13 +9,20 @@ struct STUDENT_DATA
 {
     string lastName;
     string firstName;
+    string email;
 };
 
 int main()
 {
     vector<STUDENT_DATA> students;
 
+#ifdef PRE_RELEASE
+    cout << "Running Pre-Release Version" << endl;
+    ifstream file("StudentData_Emails.txt");
+#else
+    cout << "Running Standard Version" << endl;
     ifstream file("StudentData.txt");
+#endif
 
     if (!file.is_open())
     {
@@ -27,16 +34,34 @@ int main()
 
     while (getline(file, line))
     {
-        size_t comma = line.find(',');
+        size_t firstComma = line.find(',');
 
-        if (comma != string::npos)
+        if (firstComma != string::npos)
         {
             STUDENT_DATA student;
 
-            student.lastName = line.substr(0, comma);
-            student.firstName = line.substr(comma + 1);
+            student.lastName = line.substr(0, firstComma);
 
-            // Remove the space after the comma
+#ifdef PRE_RELEASE
+
+            size_t secondComma = line.find(',', firstComma + 1);
+
+            if (secondComma != string::npos)
+            {
+                student.firstName = line.substr(
+                    firstComma + 1,
+                    secondComma - firstComma - 1
+                );
+
+                student.email = line.substr(secondComma + 1);
+            }
+
+#else
+
+            student.firstName = line.substr(firstComma + 1);
+
+#endif
+
             if (!student.firstName.empty() && student.firstName[0] == ' ')
             {
                 student.firstName.erase(0, 1);
@@ -56,7 +81,13 @@ int main()
     for (const STUDENT_DATA& student : students)
     {
         cout << student.lastName << ", "
-            << student.firstName << endl;
+            << student.firstName;
+
+#ifdef PRE_RELEASE
+        cout << " - " << student.email;
+#endif
+
+        cout << endl;
     }
 
 #endif
